@@ -31,6 +31,10 @@ router.get('/:id', (req, res) => {
     res.status(404).json(err);
    }
  })
+ .catch((err) => {
+  console.log(err);
+  res.status(504).json(err);
+ });
 });
 
 router.post('/', (req, res) => {
