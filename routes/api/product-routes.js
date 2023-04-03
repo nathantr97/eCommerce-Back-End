@@ -5,6 +5,20 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 
 // get all products
 router.get('/', (req, res) => {
+  Product.findAll({
+    include: [{ model: Category}, { model: Tag }],
+  })
+    .then((data) => {
+      res.json(data);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(504).json({
+        message: "Service Unavailable",
+        err: err,
+      });
+    });
+
   // find all products
   // be sure to include its associated Category and Tag data
 });
@@ -13,19 +27,36 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
+  Product.findByPk(req.params.id, {
+    include: [{ model: Category}, { model: Tag}],
+  })
+  .then((data) => {
+    if (data) {
+      return res.json(data);
+    } else {
+      res.status(404).json({
+        message: "category not found",
+        err: err,
+      });
+    }
+})
+  .catch((err) => {
+    console.log(err);
+    res.status(504).json({
+      message: "Service Unavailable!",
+      err: err,
+    });
+  });
 });
 
 // create new product
 router.post('/', (req, res) => {
-  /* req.body should look like this...
-    {
-      product_name: "Basketball",
-      price: 200.00,
-      stock: 3,
-      tagIds: [1, 2, 3, 4]
-    }
-  */
-  Product.create(req.body)
+  Product.create({
+    product_name: req.body.product_name,
+    price: req.body.price,
+    stock: req.body.stocl,
+    category_id: req.body.category_id,
+  })
     .then((product) => {
       // if there's product tags, we need to create pairings to bulk create in the ProductTag model
       if (req.body.tagIds.length) {
@@ -91,6 +122,27 @@ router.put('/:id', (req, res) => {
 
 router.delete('/:id', (req, res) => {
   // delete one product by its `id` value
+  Product.destroy({
+    where: {
+      id: req.params.id,
+    },
+  })
+  .then((data) => {
+    if (data) {
+      return res.json(data);
+    } else {
+      return res.status(404).json({
+        message: "product not found!",
+      });
+    }
+  })
+  .catch((err) => {
+    console.log(err);
+    res.status(504).json({
+      message: "Service unavailable",
+      err:err,
+    });
+  });
 });
 
 module.exports = router;
